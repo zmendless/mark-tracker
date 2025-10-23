@@ -38,11 +38,85 @@
             margin-bottom: 15px;
         }
 
-        .controls {
+        .connection-status {
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .connection-status.connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .connection-status.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .connection-status.loading {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .header-controls {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
             justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: 2px solid #003049;
+            background: white;
+            color: #003049;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: #003049;
+            color: white;
+        }
+
+        .view-btn:active {
+            transform: scale(0.95);
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            padding: 10px 20px;
+            border: 2px solid #003049;
+            background: white;
+            color: #003049;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sort-btn.active {
+            background: #003049;
+            color: white;
+        }
+
+        .sort-btn:active {
+            transform: scale(0.95);
         }
 
         .btn {
@@ -153,55 +227,92 @@
             background: #b91c1c;
         }
 
-        .delete-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 8px;
-            background: #f56565;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #003049;
+            font-size: 18px;
         }
 
-        .delete-btn:active {
-            transform: scale(0.9);
-            background: #e53e3e;
-        }
-
-        .add-student-section {
+        .chart-container {
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
-        .input-group {
+        .bar-chart {
             display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bar-label {
+            min-width: 120px;
+            font-weight: 600;
+            color: #003049;
+            font-size: 14px;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
+        .bar {
+            height: 30px;
+            background: #003049;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+            min-width: 2px;
         }
 
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
+        .bar-value {
+            font-weight: 700;
+            color: #003049;
+            min-width: 30px;
         }
 
-        .empty-state {
+        .hidden {
+            display: none;
+        }
+
+        .firebase-setup {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
             text-align: center;
-            padding: 40px;
-            color: white;
-            font-size: 18px;
+        }
+
+        .firebase-setup h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .firebase-setup p {
+            color: #856404;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .firebase-setup code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
         }
 
         @media (max-width: 480px) {
@@ -213,20 +324,92 @@
             .student-actions {
                 justify-content: center;
             }
+
+            .bar-label {
+                min-width: 80px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div id="firebaseSetup" class="firebase-setup">
+            <h3>⚠️ Firebase Setup Required</h3>
+            <p>Please add your Firebase configuration to line 318 in the code.</p>
+            <p>Replace the placeholder values with your actual Firebase config from the Firebase Console.</p>
+            <p>Instructions: Go to Firebase Console → Project Settings → Your apps → Web app</p>
+        </div>
+
         <header>
             <h1>📚 Mark Tracker</h1>
+            <div class="connection-status loading" id="connectionStatus">Connecting...</div>
+            <div class="header-controls">
+                <button class="view-btn active" onclick="setView('list')">List View</button>
+                <button class="view-btn" onclick="setView('graph')">Graph View</button>
+            </div>
+            <div class="sort-controls">
+                <button class="sort-btn active" onclick="setSortMode('marks')">Sort by Marks</button>
+                <button class="sort-btn" onclick="setSortMode('alpha')">Sort Alphabetically</button>
+            </div>
         </header>
 
-        <div class="student-list" id="studentList"></div>
+        <div id="listView" class="student-list"></div>
+        
+        <div id="graphView" class="chart-container hidden">
+            <div class="bar-chart" id="barChart"></div>
+        </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script>
-        // Initialize students data from memory
+        // ===== FIREBASE CONFIGURATION =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFDcu5QJmGsTsCfOqV8CWik1k9dgWF1yI",
+            authDomain: "mark-tracker-98f87.firebaseapp.com",
+            databaseURL: "https://mark-tracker-98f87-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "mark-tracker-98f87",
+            storageBucket: "mark-tracker-98f87.firebasestorage.app",
+            messagingSenderId: "1098977328461",
+            appId: "1:1098977328461:web:bf7012e2ddda8212700b04",
+            measurementId: "G-DZXQZL08PV"
+        };
+
+        // Check if Firebase is configured
+        const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+        let db;
+        let studentsRef;
+        let settingsRef;
+
+        if (isFirebaseConfigured) {
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            studentsRef = db.ref('students');
+            settingsRef = db.ref('settings');
+
+            // Hide setup warning
+            document.getElementById('firebaseSetup').style.display = 'none';
+
+            // Connection status
+            const connectedRef = db.ref('.info/connected');
+            connectedRef.on('value', (snap) => {
+                const status = document.getElementById('connectionStatus');
+                if (snap.val() === true) {
+                    status.textContent = '🟢 Connected';
+                    status.className = 'connection-status connected';
+                } else {
+                    status.textContent = '🔴 Disconnected';
+                    status.className = 'connection-status disconnected';
+                }
+            });
+        }
+
+        // Initial student data (only used if Firebase is not set up)
         let students = [
             { id: 1, name: "Student 1", marks: 0 },
             { id: 2, name: "Student 2", marks: 0 },
@@ -234,46 +417,125 @@
         ];
 
         let nextId = 4;
+        let sortMode = 'marks';
+        let currentView = 'list';
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            renderStudents();
+            if (isFirebaseConfigured) {
+                loadFromFirebase();
+            } else {
+                loadFromLocalStorage();
+                renderContent();
+            }
         });
 
-        function loadData() {
+        function loadFromLocalStorage() {
             try {
                 const saved = localStorage.getItem('markTrackerData');
                 if (saved) {
                     const data = JSON.parse(saved);
                     students = data.students || students;
                     nextId = data.nextId || nextId;
+                    sortMode = data.sortMode || 'marks';
+                    currentView = data.currentView || 'list';
                 }
             } catch (e) {
-                console.error('Error loading data:', e);
+                console.error('Error loading from localStorage:', e);
             }
         }
 
-        function saveData() {
+        function saveToLocalStorage() {
             try {
                 localStorage.setItem('markTrackerData', JSON.stringify({
                     students: students,
-                    nextId: nextId
+                    nextId: nextId,
+                    sortMode: sortMode,
+                    currentView: currentView
                 }));
             } catch (e) {
-                console.error('Error saving data:', e);
+                console.error('Error saving to localStorage:', e);
             }
         }
 
-        function renderStudents() {
-            const list = document.getElementById('studentList');
-            
-            if (students.length === 0) {
-                list.innerHTML = '<div class="empty-state">No students yet. Add one above!</div>';
+        function loadFromFirebase() {
+            // Load students
+            studentsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    students = Object.values(data);
+                    renderContent();
+                } else {
+                    // Initialize with default students if empty
+                    students.forEach(student => {
+                        studentsRef.child(student.id).set(student);
+                    });
+                }
+            });
+
+            // Load settings
+            settingsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    sortMode = data.sortMode || 'marks';
+                    currentView = data.currentView || 'list';
+                    renderContent();
+                }
+            });
+        }
+
+        function saveToFirebase() {
+            if (!isFirebaseConfigured) {
+                saveToLocalStorage();
                 return;
             }
 
-            list.innerHTML = students.map(student => `
+            // Save all students
+            const studentsData = {};
+            students.forEach(student => {
+                studentsData[student.id] = student;
+            });
+            studentsRef.set(studentsData);
+
+            // Save settings
+            settingsRef.set({
+                sortMode: sortMode,
+                currentView: currentView
+            });
+        }
+
+        function getSortedStudents() {
+            let displayStudents = [...students];
+            
+            if (sortMode === 'marks') {
+                displayStudents.sort((a, b) => b.marks - a.marks);
+            } else if (sortMode === 'alpha') {
+                displayStudents.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            return displayStudents;
+        }
+
+        function renderContent() {
+            if (currentView === 'list') {
+                renderStudents();
+            } else {
+                renderGraph();
+            }
+            updateActiveButtons();
+        }
+
+        function renderStudents() {
+            const list = document.getElementById('listView');
+            
+            if (students.length === 0) {
+                list.innerHTML = '<div class="empty-state">No students yet.</div>';
+                return;
+            }
+
+            const displayStudents = getSortedStudents();
+
+            list.innerHTML = displayStudents.map(student => `
                 <div class="student-card">
                     <div class="student-info">
                         <div class="student-name">${escapeHtml(student.name)}</div>
@@ -287,12 +549,75 @@
             `).join('');
         }
 
+        function renderGraph() {
+            const chart = document.getElementById('barChart');
+            
+            if (students.length === 0) {
+                chart.innerHTML = '<div class="empty-state">No students to display</div>';
+                return;
+            }
+
+            const displayStudents = getSortedStudents();
+            const maxMarks = Math.max(...displayStudents.map(s => s.marks), 1);
+
+            chart.innerHTML = displayStudents.map(student => {
+                const percentage = (student.marks / maxMarks) * 100;
+                return `
+                    <div class="bar-item">
+                        <div class="bar-label">${escapeHtml(student.name)}</div>
+                        <div class="bar-wrapper">
+                            <div class="bar" style="width: ${percentage}%"></div>
+                            <div class="bar-value">${student.marks}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateActiveButtons() {
+            // Update sort buttons
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeSortBtn = sortMode === 'marks' ? 0 : 1;
+            document.querySelectorAll('.sort-btn')[activeSortBtn].classList.add('active');
+
+            // Update view buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeViewBtn = currentView === 'list' ? 0 : 1;
+            document.querySelectorAll('.view-btn')[activeViewBtn].classList.add('active');
+
+            // Toggle visibility
+            document.getElementById('listView').classList.toggle('hidden', currentView !== 'list');
+            document.getElementById('graphView').classList.toggle('hidden', currentView !== 'graph');
+        }
+
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
                 student.marks = Math.max(0, student.marks + change);
-                saveData();
-                renderStudents();
+                saveToFirebase();
+                if (!isFirebaseConfigured) {
+                    renderContent();
+                }
+            }
+        }
+
+        function setSortMode(mode) {
+            sortMode = mode;
+            saveToFirebase();
+            if (!isFirebaseConfigured) {
+                renderContent();
+            }
+        }
+
+        function setView(view) {
+            currentView = view;
+            saveToFirebase();
+            if (!isFirebaseConfigured) {
+                renderContent();
             }
         }
 
