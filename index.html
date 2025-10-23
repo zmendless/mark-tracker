@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f2e5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #003049;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: #003049;
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+            background: #002037;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:active {
+            transform: scale(0.95);
+            background: #e53e3e;
+        }
+
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .student-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .student-mark {
+            font-size: 32px;
+            font-weight: 700;
+            color: #003049;
+        }
+
+        .student-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mark-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mark-btn.plus {
+            background: #48bb78;
+            color: white;
+        }
+
+        .mark-btn.plus:active {
+            transform: scale(0.9);
+            background: #38a169;
+        }
+
+        .mark-btn.minus {
+            background: #dc2626;
+            color: white;
+        }
+
+        .mark-btn.minus:active {
+            transform: scale(0.9);
+            background: #b91c1c;
+        }
+
+        .delete-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #f56565;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:active {
+            transform: scale(0.9);
+            background: #e53e3e;
+        }
+
+        .add-student-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        @media (max-width: 480px) {
+            .student-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .student-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Mark Tracker</h1>
+        </header>
+
+        <div class="student-list" id="studentList"></div>
+    </div>
+
+    <script>
+        // Initialize students data from memory
+        let students = [
+            { id: 1, name: "Student 1", marks: 0 },
+            { id: 2, name: "Student 2", marks: 0 },
+            { id: 3, name: "Student 3", marks: 0 }
+        ];
+
+        let nextId = 4;
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            renderStudents();
+        });
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('markTrackerData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    students = data.students || students;
+                    nextId = data.nextId || nextId;
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('markTrackerData', JSON.stringify({
+                    students: students,
+                    nextId: nextId
+                }));
+            } catch (e) {
+                console.error('Error saving data:', e);
+            }
+        }
+
+        function renderStudents() {
+            const list = document.getElementById('studentList');
+            
+            if (students.length === 0) {
+                list.innerHTML = '<div class="empty-state">No students yet. Add one above!</div>';
+                return;
+            }
+
+            list.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-info">
+                        <div class="student-name">${escapeHtml(student.name)}</div>
+                        <div class="student-mark">${student.marks}</div>
+                    </div>
+                    <div class="student-actions">
+                        <button class="mark-btn minus" onclick="updateMarks(${student.id}, -1)">−</button>
+                        <button class="mark-btn plus" onclick="updateMarks(${student.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateMarks(studentId, change) {
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                student.marks = Math.max(0, student.marks + change);
+                saveData();
+                renderStudents();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
