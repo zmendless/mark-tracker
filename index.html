@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003049">
+    <meta name="description" content="Track student marks offline">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>Mark Tracker</title>
     <style>
         * {
@@ -23,6 +27,54 @@
             margin: 0 auto;
         }
 
+        .install-prompt {
+            background: #003049;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .install-prompt.show {
+            display: flex;
+        }
+
+        .install-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .install-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .install-btn:active {
+            background: #38a169;
+        }
+
+        .dismiss-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
         header {
             background: white;
             padding: 25px;
@@ -36,6 +88,17 @@
             color: #003049;
             font-size: 28px;
             margin-bottom: 15px;
+        }
+
+        .offline-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #48bb78;
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
 
         .header-controls {
@@ -531,7 +594,15 @@
 </head>
 <body>
     <div class="container">
+        <!-- Install prompt -->
+        <div id="installPrompt" class="install-prompt">
+            <div class="install-text">📱 Install Mark Tracker as an app for offline use!</div>
+            <button class="install-btn" onclick="installApp()">Install</button>
+            <button class="dismiss-btn" onclick="dismissInstall()">Later</button>
+        </div>
+
         <header>
+            <div class="offline-indicator">✓ Offline Mode</div>
             <h1>📚 Mark Tracker</h1>
             <div class="header-controls">
                 <button class="view-btn active" onclick="setView('list')">List View</button>
@@ -571,135 +642,119 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <script>
-        // ===== FIREBASE CONFIGURATION =====
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFDcu5QJmGsTsCfOqV8CWik1k9dgWF1yI",
-            authDomain: "mark-tracker-98f87.firebaseapp.com",
-            databaseURL: "https://mark-tracker-98f87-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "mark-tracker-98f87",
-            storageBucket: "mark-tracker-98f87.firebasestorage.app",
-            messagingSenderId: "1098977328461",
-            appId: "1:1098977328461:web:bf7012e2ddda8212700b04",
-            measurementId: "G-DZXQZL08PV"
-        };
+        // ===== PWA INSTALLATION =====
+        let deferredPrompt;
 
-        // Check if Firebase is configured
-        const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
 
-        let db;
-        let studentsRef;
-        let settingsRef;
-        let logsRef;
-
-        if (isFirebaseConfigured) {
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            studentsRef = db.ref('students');
-            settingsRef = db.ref('settings');
-            logsRef = db.ref('logs');
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App installed');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
         }
 
-        // Initial student data (only used if Firebase is not set up)
-        let students = [
-            { id: 1, name: "Student 1", marks: 0 },
-            { id: 2, name: "Student 2", marks: 0 },
-            { id: 3, name: "Student 3", marks: 0 }
-        ];
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
 
-        let nextId = 4;
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+
+        // ===== STUDENT DATA (Load from students.json) =====
+        let students = [];
         let sortMode = 'marks';
         let currentView = 'list';
         let longPressTimer = null;
         let pendingUpdate = null;
 
         // Load data on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            if (isFirebaseConfigured) {
-                loadFromFirebase();
-            } else {
-                loadFromLocalStorage();
-                renderContent();
-            }
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadStudentsFromJSON();
+            loadSettings();
+            renderContent();
         });
 
-        function loadFromLocalStorage() {
+        async function loadStudentsFromJSON() {
             try {
-                const saved = localStorage.getItem('markTrackerData');
+                // Try to load saved marks from localStorage first
+                const savedMarks = localStorage.getItem('studentMarks');
+                
+                // Load the students.json file
+                const response = await fetch('students.json');
+                const studentList = await response.json();
+                
+                // If we have saved marks, merge them with the student list
+                if (savedMarks) {
+                    const marksData = JSON.parse(savedMarks);
+                    students = studentList.map(student => ({
+                        ...student,
+                        marks: marksData[student.id] !== undefined ? marksData[student.id] : 0
+                    }));
+                } else {
+                    // First time load - initialize all marks to 0
+                    students = studentList.map(student => ({
+                        ...student,
+                        marks: 0
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                // Fallback to empty array if JSON file doesn't exist
+                students = [];
+            }
+        }
+
+        function saveMarks() {
+            try {
+                // Save only the marks, keyed by student ID
+                const marksData = {};
+                students.forEach(student => {
+                    marksData[student.id] = student.marks;
+                });
+                localStorage.setItem('studentMarks', JSON.stringify(marksData));
+            } catch (e) {
+                console.error('Error saving marks:', e);
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('markTrackerSettings');
                 if (saved) {
                     const data = JSON.parse(saved);
-                    students = data.students || students;
-                    nextId = data.nextId || nextId;
                     sortMode = data.sortMode || 'marks';
                     currentView = data.currentView || 'list';
                 }
             } catch (e) {
-                console.error('Error loading from localStorage:', e);
+                console.error('Error loading settings:', e);
             }
         }
 
-        function saveToLocalStorage() {
+        function saveSettings() {
             try {
-                localStorage.setItem('markTrackerData', JSON.stringify({
-                    students: students,
-                    nextId: nextId,
+                localStorage.setItem('markTrackerSettings', JSON.stringify({
                     sortMode: sortMode,
                     currentView: currentView
                 }));
             } catch (e) {
-                console.error('Error saving to localStorage:', e);
+                console.error('Error saving settings:', e);
             }
-        }
-
-        function loadFromFirebase() {
-            // Load students
-            studentsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    students = Object.values(data);
-                    renderContent();
-                } else {
-                    // Initialize with default students if empty
-                    students.forEach(student => {
-                        studentsRef.child(student.id).set(student);
-                    });
-                }
-            });
-
-            // Load settings
-            settingsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    sortMode = data.sortMode || 'marks';
-                    currentView = data.currentView || 'list';
-                    renderContent();
-                }
-            });
-        }
-
-        function saveToFirebase() {
-            if (!isFirebaseConfigured) {
-                saveToLocalStorage();
-                return;
-            }
-
-            // Save all students
-            const studentsData = {};
-            students.forEach(student => {
-                studentsData[student.id] = student;
-            });
-            studentsRef.set(studentsData);
-
-            // Save settings
-            settingsRef.set({
-                sortMode: sortMode,
-                currentView: currentView
-            });
         }
 
         function getSortedStudents() {
@@ -729,7 +784,7 @@
             const list = document.getElementById('listView');
             
             if (students.length === 0) {
-                list.innerHTML = '<div class="empty-state">No students yet.</div>';
+                list.innerHTML = '<div class="empty-state">No students loaded. Add a students.json file.</div>';
                 return;
             }
 
@@ -823,7 +878,7 @@
             }).join('');
         }
 
-function getTop8Threshold() {
+        function getTop8Threshold() {
             if (students.length === 0) return 0;
             
             // Get unique marks and sort descending
@@ -835,14 +890,12 @@ function getTop8Threshold() {
             }
             
             // Find the 8th unique mark (index 7)
-            // This is the threshold for top 8 different scores
             return uniqueMarks[7];
         }
 
         function renderTop8() {
             const container = document.getElementById('top8List');
             const thresholdEl = document.getElementById('top8Threshold');
-            const top8View = document.getElementById('top8View');
             
             if (students.length === 0) {
                 container.innerHTML = '<div class="empty-state">No students to display</div>';
@@ -982,46 +1035,20 @@ function getTop8Threshold() {
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
-                const oldMarks = student.marks;
                 student.marks = Math.max(0, student.marks + change);
-                const newMarks = student.marks;
-                
-                // Log the change
-                logMarkChange(studentId, student.name, oldMarks, newMarks, change);
-                
-                saveToFirebase();
-                if (!isFirebaseConfigured) {
-                    renderContent();
-                }
+                saveMarks();
+                renderContent();
             }
-        }
-
-        function logMarkChange(studentId, studentName, oldMarks, newMarks, change) {
-            if (!isFirebaseConfigured) return;
-            
-            const logEntry = {
-                studentId: studentId,
-                studentName: studentName,
-                oldMarks: oldMarks,
-                newMarks: newMarks,
-                change: change,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().toISOString()
-            };
-            
-            // Push to logs
-            logsRef.push(logEntry);
         }
 
         function startLongPress(studentId, change, event) {
             event.preventDefault();
-            cancelLongPress(); // Clear any existing timer
+            cancelLongPress();
             longPressTimer = setTimeout(() => {
-                // Long press detected
                 pendingUpdate = { studentId, change };
                 showModal(change > 0 ? 'Add Points' : 'Subtract Points');
                 longPressTimer = null;
-            }, 500); // 500ms hold time
+            }, 500);
         }
 
         function endLongPress(studentId, change, event) {
@@ -1029,7 +1056,6 @@ function getTop8Threshold() {
             if (longPressTimer) {
                 clearTimeout(longPressTimer);
                 longPressTimer = null;
-                // If modal hasn't opened, do single update
                 if (!pendingUpdate) {
                     updateMarks(studentId, change);
                     quickFeedback(event);
@@ -1073,32 +1099,22 @@ function getTop8Threshold() {
             }
         }
 
-        // Allow Enter key to confirm
-        document.addEventListener('DOMContentLoaded', () => {
-            const modalInput = document.getElementById('modalInput');
-            if (modalInput) {
-                modalInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        confirmBulkUpdate();
-                    }
-                });
+        document.getElementById('modalInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                confirmBulkUpdate();
             }
         });
 
         function setSortMode(mode) {
             sortMode = mode;
-            saveToFirebase();
-            if (!isFirebaseConfigured) {
-                renderContent();
-            }
+            saveSettings();
+            renderContent();
         }
 
         function setView(view) {
             currentView = view;
-            saveToFirebase();
-            if (!isFirebaseConfigured) {
-                renderContent();
-            }
+            saveSettings();
+            renderContent();
         }
 
         function quickFeedback(event) {
@@ -1109,7 +1125,6 @@ function getTop8Threshold() {
             }, 200);
         }
 
-        // Add quick feedback to view and sort buttons
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('view-btn') || e.target.classList.contains('sort-btn')) {
                 quickFeedback(e);
