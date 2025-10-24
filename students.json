@@ -1,4 +1,3 @@
-// Suppose your JSON data is in a variable called `data`
 data.students = [
     { "id": 1, "marks": 46, "name": "Ali Özfırat" },
     { "id": 2, "marks": 49, "name": "Bülent Kayra Mert" },
@@ -28,5 +27,5 @@ data.students = [
     { "id": 26, "marks": 39, "name": "Bengisu" }
 ];
 
-// Now data.students contains the new marks
+
 
