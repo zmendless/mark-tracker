@@ -692,27 +692,21 @@
 
 async function loadStudentsFromJSON() {
     try {
-        // Load saved marks from localStorage
         const savedMarks = localStorage.getItem('studentMarks');
-
-        // Fetch students.json
         const response = await fetch('students.json');
         const studentList = await response.json();
 
-        // Merge saved marks if any
         if (savedMarks) {
             const marksData = JSON.parse(savedMarks);
             students = studentList.map(student => ({
                 ...student,
-                marks: marksData[student.id.toString()] !== undefined 
-                    ? marksData[student.id.toString()] 
-                    : 0
+                marks: marksData[student.id] !== undefined ? marksData[student.id] : (student.marks || 0)
             }));
         } else {
-            // First-time load: initialize all marks to 0
+            // Use JSON marks directly
             students = studentList.map(student => ({
                 ...student,
-                marks: 0
+                marks: student.marks || 0
             }));
         }
     } catch (error) {
@@ -720,6 +714,7 @@ async function loadStudentsFromJSON() {
         students = [];
     }
 }
+
 
 
         function saveMarks() {
