@@ -594,6 +594,7 @@
         let db;
         let studentsRef;
         let settingsRef;
+        let logsRef;
 
         if (isFirebaseConfigured) {
             // Initialize Firebase
@@ -601,6 +602,7 @@
             db = firebase.database();
             studentsRef = db.ref('students');
             settingsRef = db.ref('settings');
+            logsRef = db.ref('logs');
         }
 
         // Initial student data (only used if Firebase is not set up)
@@ -975,12 +977,35 @@
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
+                const oldMarks = student.marks;
                 student.marks = Math.max(0, student.marks + change);
+                const newMarks = student.marks;
+                
+                // Log the change
+                logMarkChange(studentId, student.name, oldMarks, newMarks, change);
+                
                 saveToFirebase();
                 if (!isFirebaseConfigured) {
                     renderContent();
                 }
             }
+        }
+
+        function logMarkChange(studentId, studentName, oldMarks, newMarks, change) {
+            if (!isFirebaseConfigured) return;
+            
+            const logEntry = {
+                studentId: studentId,
+                studentName: studentName,
+                oldMarks: oldMarks,
+                newMarks: newMarks,
+                change: change,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().toISOString()
+            };
+            
+            // Push to logs
+            logsRef.push(logEntry);
         }
 
         function startLongPress(studentId, change, event) {
