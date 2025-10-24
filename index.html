@@ -157,6 +157,11 @@
             align-items: center;
             justify-content: space-between;
             gap: 15px;
+            transition: transform 0.5s ease, opacity 0.3s ease;
+        }
+
+        .student-card.moving {
+            z-index: 10;
         }
 
         .student-info {
@@ -488,8 +493,19 @@
 
             const displayStudents = getSortedStudents();
 
+            // Store current positions before render
+            const oldPositions = new Map();
+            const existingCards = list.querySelectorAll('.student-card');
+            existingCards.forEach((card) => {
+                const rect = card.getBoundingClientRect();
+                const id = card.dataset.studentId;
+                if (id) {
+                    oldPositions.set(id, rect.top);
+                }
+            });
+
             list.innerHTML = displayStudents.map(student => `
-                <div class="student-card">
+                <div class="student-card" data-student-id="${student.id}">
                     <div class="student-info">
                         <div class="student-name">${escapeHtml(student.name)}</div>
                         <div class="student-mark">${student.marks}</div>
@@ -500,6 +516,32 @@
                     </div>
                 </div>
             `).join('');
+
+            // Animate position changes if in marks sort mode
+            if (sortMode === 'marks' && oldPositions.size > 0) {
+                requestAnimationFrame(() => {
+                    const newCards = list.querySelectorAll('.student-card');
+                    newCards.forEach((card) => {
+                        const id = card.dataset.studentId;
+                        const oldTop = oldPositions.get(id);
+                        const newRect = card.getBoundingClientRect();
+                        
+                        if (oldTop !== undefined && oldTop !== newRect.top) {
+                            const delta = oldTop - newRect.top;
+                            
+                            // Apply initial transform
+                            card.style.transform = `translateY(${delta}px)`;
+                            card.style.transition = 'none';
+                            
+                            // Trigger animation
+                            requestAnimationFrame(() => {
+                                card.style.transition = 'transform 0.5s ease';
+                                card.style.transform = 'translateY(0)';
+                            });
+                        }
+                    });
+                });
+            }
         }
 
         function renderGraph() {
