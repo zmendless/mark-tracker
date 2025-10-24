@@ -38,8 +38,6 @@
             margin-bottom: 15px;
         }
 
-
-
         .header-controls {
             display: flex;
             gap: 10px;
@@ -288,7 +286,110 @@
             display: none;
         }
 
+        .top8-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
+        .top8-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .top8-header h2 {
+            color: #003049;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .top8-threshold {
+            color: #48bb78;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .top8-group {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .top8-group-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #003049;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .top8-group.qualified .top8-group-header {
+            color: #48bb78;
+        }
+
+        .top8-group.not-qualified .top8-group-header {
+            color: #dc2626;
+        }
+
+        .top8-students {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .top8-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            gap: 15px;
+        }
+
+        .top8-item-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .top8-rank {
+            font-size: 20px;
+            font-weight: 700;
+            color: #003049;
+            min-width: 40px;
+        }
+
+        .top8-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            word-break: break-word;
+        }
+
+        .top8-marks {
+            font-size: 20px;
+            font-weight: 700;
+            color: #003049;
+            margin-right: 10px;
+        }
+
+        .top8-badge {
+            background: #48bb78;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
 
         @media (max-width: 480px) {
             .student-card {
@@ -303,6 +404,19 @@
             .bar-label {
                 min-width: 80px;
                 font-size: 12px;
+            }
+
+            .top8-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .top8-item-left {
+                width: 100%;
+            }
+
+            .top8-marks {
+                margin-right: 0;
             }
         }
     </style>
@@ -600,19 +714,68 @@
             // Sort by marks descending
             const sorted = [...students].sort((a, b) => b.marks - a.marks);
 
-            container.innerHTML = sorted.map((student, index) => {
-                const rank = index + 1;
-                const isInTop8 = student.marks >= threshold;
-                
-                return `
-                    <div class="top8-item ${isInTop8 ? 'in-top8' : ''}">
-                        <div class="top8-rank">#${rank}</div>
-                        <div class="top8-name">${escapeHtml(student.name)}</div>
-                        <div class="top8-marks">${student.marks}</div>
-                        ${isInTop8 ? '<div class="top8-badge">Full Marks ✓</div>' : ''}
+            // Separate qualified and not qualified students
+            const qualified = sorted.filter(s => s.marks >= threshold);
+            const notQualified = sorted.filter(s => s.marks < threshold);
+
+            let html = '';
+
+            // Render qualified group
+            if (qualified.length > 0) {
+                html += `
+                    <div class="top8-group qualified">
+                        <div class="top8-group-header">✓ Full Marks (${qualified.length} student${qualified.length !== 1 ? 's' : ''})</div>
+                        <div class="top8-students">
+                `;
+
+                qualified.forEach((student, index) => {
+                    const rank = index + 1;
+                    html += `
+                        <div class="top8-item">
+                            <div class="top8-item-left">
+                                <div class="top8-rank">#${rank}</div>
+                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                            </div>
+                            <div class="top8-marks">${student.marks}</div>
+                            <div class="top8-badge">Full Marks ✓</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
                     </div>
                 `;
-            }).join('');
+            }
+
+            // Render not qualified group
+            if (notQualified.length > 0) {
+                html += `
+                    <div class="top8-group not-qualified">
+                        <div class="top8-group-header">Below Threshold (${notQualified.length} student${notQualified.length !== 1 ? 's' : ''})</div>
+                        <div class="top8-students">
+                `;
+
+                notQualified.forEach((student, index) => {
+                    const rank = qualified.length + index + 1;
+                    html += `
+                        <div class="top8-item">
+                            <div class="top8-item-left">
+                                <div class="top8-rank">#${rank}</div>
+                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                            </div>
+                            <div class="top8-marks">${student.marks}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
         }
 
         function updateActiveButtons() {
