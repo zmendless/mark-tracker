@@ -79,13 +79,6 @@
             100% { transform: scale(1); }
         }
 
-        .sort-controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
         .sort-btn {
             padding: 10px 20px;
             border: 2px solid #003049;
@@ -321,6 +314,7 @@
             <div class="header-controls">
                 <button class="view-btn active" onclick="setView('list')">List View</button>
                 <button class="view-btn" onclick="setView('graph')">Graph View</button>
+                <button class="view-btn" onclick="setView('top8')">Top 8</button>
             </div>
             <div class="sort-controls">
                 <button class="sort-btn active" onclick="setSortMode('marks')">Sort by Marks</button>
@@ -332,6 +326,14 @@
         
         <div id="graphView" class="chart-container hidden">
             <div class="bar-chart" id="barChart"></div>
+        </div>
+
+        <div id="top8View" class="top8-container hidden">
+            <div class="top8-header">
+                <h2>🏆 Top 8 Threshold</h2>
+                <div class="top8-threshold" id="top8Threshold">Calculating...</div>
+            </div>
+            <div class="top8-list" id="top8List"></div>
         </div>
     </div>
 
@@ -477,8 +479,10 @@
         function renderContent() {
             if (currentView === 'list') {
                 renderStudents();
-            } else {
+            } else if (currentView === 'graph') {
                 renderGraph();
+            } else if (currentView === 'top8') {
+                renderTop8();
             }
             updateActiveButtons();
         }
@@ -569,6 +573,48 @@
             }).join('');
         }
 
+        function getTop8Threshold() {
+            if (students.length === 0) return 0;
+            
+            // Sort by marks descending
+            const sorted = [...students].sort((a, b) => b.marks - a.marks);
+            
+            // Get the 8th highest mark (or the lowest if less than 8 students)
+            const index = Math.min(7, sorted.length - 1);
+            return sorted[index].marks;
+        }
+
+        function renderTop8() {
+            const container = document.getElementById('top8List');
+            const thresholdEl = document.getElementById('top8Threshold');
+            
+            if (students.length === 0) {
+                container.innerHTML = '<div class="empty-state">No students to display</div>';
+                thresholdEl.textContent = '0 points';
+                return;
+            }
+
+            const threshold = getTop8Threshold();
+            thresholdEl.textContent = `${threshold} points or more = Full marks`;
+
+            // Sort by marks descending
+            const sorted = [...students].sort((a, b) => b.marks - a.marks);
+
+            container.innerHTML = sorted.map((student, index) => {
+                const rank = index + 1;
+                const isInTop8 = student.marks >= threshold;
+                
+                return `
+                    <div class="top8-item ${isInTop8 ? 'in-top8' : ''}">
+                        <div class="top8-rank">#${rank}</div>
+                        <div class="top8-name">${escapeHtml(student.name)}</div>
+                        <div class="top8-marks">${student.marks}</div>
+                        ${isInTop8 ? '<div class="top8-badge">Full Marks ✓</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
         function updateActiveButtons() {
             // Update sort buttons
             document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -581,12 +627,13 @@
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            const activeViewBtn = currentView === 'list' ? 0 : 1;
+            const activeViewBtn = currentView === 'list' ? 0 : currentView === 'graph' ? 1 : 2;
             document.querySelectorAll('.view-btn')[activeViewBtn].classList.add('active');
 
             // Toggle visibility
             document.getElementById('listView').classList.toggle('hidden', currentView !== 'list');
             document.getElementById('graphView').classList.toggle('hidden', currentView !== 'graph');
+            document.getElementById('top8View').classList.toggle('hidden', currentView !== 'top8');
         }
 
         function updateMarks(studentId, change) {
