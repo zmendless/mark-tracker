@@ -823,20 +823,20 @@
             }).join('');
         }
 
-    function getTop8Threshold() {
+function getTop8Threshold() {
             if (students.length === 0) return 0;
             
-            // Sort by marks descending
-            const sorted = [...students].sort((a, b) => b.marks - a.marks);
+            // Get unique marks and sort descending
+            const uniqueMarks = [...new Set(students.map(s => s.marks))].sort((a, b) => b - a);
             
-            // If 8 or fewer students, the threshold is the lowest mark
-            if (sorted.length <= 8) {
-                return sorted[sorted.length - 1].marks;
+            // If 8 or fewer unique marks, the threshold is the lowest unique mark
+            if (uniqueMarks.length <= 8) {
+                return uniqueMarks[uniqueMarks.length - 1];
             }
             
-            // Find the 8th student's mark (index 7)
-            // This is the threshold for top 8
-            return sorted[7].marks;
+            // Find the 8th unique mark (index 7)
+            // This is the threshold for top 8 different scores
+            return uniqueMarks[7];
         }
 
         function renderTop8() {
