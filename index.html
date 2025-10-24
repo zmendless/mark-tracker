@@ -57,27 +57,7 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .view-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(0, 48, 73, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.5s, height 0.5s;
-        }
-
-        .view-btn.ripple::after {
-            width: 200px;
-            height: 200px;
+            transition: transform 0.1s ease, background 0.2s ease;
         }
 
         .view-btn.active {
@@ -87,6 +67,16 @@
 
         .view-btn:active {
             transform: scale(0.95);
+        }
+
+        .view-btn.pressed {
+            animation: quickPress 0.2s ease;
+        }
+
+        @keyframes quickPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
         }
 
         .sort-controls {
@@ -105,27 +95,7 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sort-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(0, 48, 73, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.5s, height 0.5s;
-        }
-
-        .sort-btn.ripple::after {
-            width: 200px;
-            height: 200px;
+            transition: transform 0.1s ease, background 0.2s ease;
         }
 
         .sort-btn.active {
@@ -135,6 +105,10 @@
 
         .sort-btn:active {
             transform: scale(0.95);
+        }
+
+        .sort-btn.pressed {
+            animation: quickPress 0.2s ease;
         }
 
         .btn {
@@ -218,31 +192,11 @@
             font-size: 24px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.1s ease, background 0.1s ease;
             touch-action: manipulation;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mark-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .mark-btn.ripple::before {
-            width: 100px;
-            height: 100px;
         }
 
         .mark-btn.plus {
@@ -251,7 +205,7 @@
         }
 
         .mark-btn.plus:active {
-            transform: scale(0.9);
+            transform: scale(0.85);
             background: #38a169;
         }
 
@@ -261,8 +215,18 @@
         }
 
         .mark-btn.minus:active {
-            transform: scale(0.9);
+            transform: scale(0.85);
             background: #b91c1c;
+        }
+
+        .mark-btn.pressed {
+            animation: quickPulse 0.2s ease;
+        }
+
+        @keyframes quickPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.85); }
+            100% { transform: scale(1); }
         }
 
         .empty-state {
@@ -531,8 +495,8 @@
                         <div class="student-mark">${student.marks}</div>
                     </div>
                     <div class="student-actions">
-                        <button class="mark-btn minus" onclick="updateMarks(${student.id}, -1); addRipple(event)">−</button>
-                        <button class="mark-btn plus" onclick="updateMarks(${student.id}, 1); addRipple(event)">+</button>
+                        <button class="mark-btn minus" onclick="updateMarks(${student.id}, -1); quickFeedback(event)">−</button>
+                        <button class="mark-btn plus" onclick="updateMarks(${student.id}, 1); quickFeedback(event)">+</button>
                     </div>
                 </div>
             `).join('');
@@ -610,19 +574,19 @@
             }
         }
 
-        function addRipple(event) {
+        function quickFeedback(event) {
             const button = event.currentTarget;
-            button.classList.add('ripple');
+            button.classList.add('pressed');
             setTimeout(() => {
-                button.classList.remove('ripple');
-            }, 600);
+                button.classList.remove('pressed');
+            }, 200);
         }
 
-        // Add ripple effect to view and sort buttons
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.view-btn, .sort-btn').forEach(btn => {
-                btn.addEventListener('click', addRipple);
-            });
+        // Add quick feedback to view and sort buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('view-btn') || e.target.classList.contains('sort-btn')) {
+                quickFeedback(e);
+            }
         });
 
         function escapeHtml(text) {
