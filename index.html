@@ -423,6 +423,82 @@
             white-space: nowrap;
         }
 
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #003049;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #003049;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.95);
+        }
+
+        .modal-btn-confirm {
+            background: #48bb78;
+            color: white;
+        }
+
+        .modal-btn-cancel {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
         @media (max-width: 480px) {
             .student-card {
                 flex-direction: column;
@@ -481,6 +557,18 @@
             </div>
             <div class="top8-list" id="top8List"></div>
         </div>
+
+        <!-- Modal for bulk points -->
+        <div id="pointsModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-title" id="modalTitle">Add Points</div>
+                <input type="number" id="modalInput" class="modal-input" placeholder="Enter number of points" min="1">
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button class="modal-btn modal-btn-confirm" onclick="confirmBulkUpdate()">Confirm</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -525,6 +613,8 @@
         let nextId = 4;
         let sortMode = 'marks';
         let currentView = 'list';
+        let longPressTimer = null;
+        let pendingUpdate = null;
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -661,8 +751,20 @@
                         <div class="student-mark">${student.marks}</div>
                     </div>
                     <div class="student-actions">
-                        <button class="mark-btn minus" onclick="updateMarks(${student.id}, -1); quickFeedback(event)">−</button>
-                        <button class="mark-btn plus" onclick="updateMarks(${student.id}, 1); quickFeedback(event)">+</button>
+                        <button class="mark-btn minus" 
+                            onmousedown="startLongPress(${student.id}, -1, event)" 
+                            onmouseup="endLongPress(${student.id}, -1, event)" 
+                            onmouseleave="cancelLongPress()" 
+                            ontouchstart="startLongPress(${student.id}, -1, event)" 
+                            ontouchend="endLongPress(${student.id}, -1, event)" 
+                            ontouchcancel="cancelLongPress()">−</button>
+                        <button class="mark-btn plus" 
+                            onmousedown="startLongPress(${student.id}, 1, event)" 
+                            onmouseup="endLongPress(${student.id}, 1, event)" 
+                            onmouseleave="cancelLongPress()" 
+                            ontouchstart="startLongPress(${student.id}, 1, event)" 
+                            ontouchend="endLongPress(${student.id}, 1, event)" 
+                            ontouchcancel="cancelLongPress()">+</button>
                     </div>
                 </div>
             `).join('');
@@ -880,6 +982,75 @@
                 }
             }
         }
+
+        function startLongPress(studentId, change, event) {
+            event.preventDefault();
+            longPressTimer = setTimeout(() => {
+                // Long press detected
+                pendingUpdate = { studentId, change };
+                showModal(change > 0 ? 'Add Points' : 'Subtract Points');
+            }, 500); // 500ms hold time
+        }
+
+        function endLongPress(studentId, change, event) {
+            event.preventDefault();
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                // If modal hasn't opened, do single update
+                if (!pendingUpdate) {
+                    updateMarks(studentId, change);
+                    quickFeedback(event);
+                }
+                longPressTimer = null;
+            }
+        }
+
+        function cancelLongPress() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+
+        function showModal(title) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalInput').value = '';
+            document.getElementById('pointsModal').classList.remove('hidden');
+            document.getElementById('modalInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('pointsModal').classList.add('hidden');
+            pendingUpdate = null;
+        }
+
+        function confirmBulkUpdate() {
+            const input = document.getElementById('modalInput');
+            const amount = parseInt(input.value);
+            
+            if (isNaN(amount) || amount < 1) {
+                alert('Please enter a valid number');
+                return;
+            }
+
+            if (pendingUpdate) {
+                const totalChange = pendingUpdate.change * amount;
+                updateMarks(pendingUpdate.studentId, totalChange);
+                closeModal();
+            }
+        }
+
+        // Allow Enter key to confirm
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalInput = document.getElementById('modalInput');
+            if (modalInput) {
+                modalInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        confirmBulkUpdate();
+                    }
+                });
+            }
+        });
 
         function setSortMode(mode) {
             sortMode = mode;
