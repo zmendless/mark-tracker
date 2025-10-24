@@ -690,35 +690,37 @@
             renderContent();
         });
 
-        async function loadStudentsFromJSON() {
-            try {
-                // Try to load saved marks from localStorage first
-                const savedMarks = localStorage.getItem('studentMarks');
-                
-                // Load the students.json file
-                const response = await fetch('students.json');
-                const studentList = await response.json();
-                
-                // If we have saved marks, merge them with the student list
-                if (savedMarks) {
-                    const marksData = JSON.parse(savedMarks);
-                    students = studentList.map(student => ({
-                        ...student,
-                        marks: marksData[student.id] !== undefined ? marksData[student.id] : 0
-                    }));
-                } else {
-                    // First time load - initialize all marks to 0
-                    students = studentList.map(student => ({
-                        ...student,
-                        marks: 0
-                    }));
-                }
-            } catch (error) {
-                console.error('Error loading students:', error);
-                // Fallback to empty array if JSON file doesn't exist
-                students = [];
-            }
+async function loadStudentsFromJSON() {
+    try {
+        // Load saved marks from localStorage
+        const savedMarks = localStorage.getItem('studentMarks');
+
+        // Fetch students.json
+        const response = await fetch('students.json');
+        const studentList = await response.json();
+
+        // Merge saved marks if any
+        if (savedMarks) {
+            const marksData = JSON.parse(savedMarks);
+            students = studentList.map(student => ({
+                ...student,
+                marks: marksData[student.id.toString()] !== undefined 
+                    ? marksData[student.id.toString()] 
+                    : 0
+            }));
+        } else {
+            // First-time load: initialize all marks to 0
+            students = studentList.map(student => ({
+                ...student,
+                marks: 0
+            }));
         }
+    } catch (error) {
+        console.error('Error loading students:', error);
+        students = [];
+    }
+}
+
 
         function saveMarks() {
             try {
@@ -1035,7 +1037,7 @@
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
-                student.marks = Math.max(0, student.marks + change);
+                student.marks = student.marks + change;
                 saveMarks();
                 renderContent();
             }
