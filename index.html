@@ -294,7 +294,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .top8-container {
@@ -985,10 +985,12 @@
 
         function startLongPress(studentId, change, event) {
             event.preventDefault();
+            cancelLongPress(); // Clear any existing timer
             longPressTimer = setTimeout(() => {
                 // Long press detected
                 pendingUpdate = { studentId, change };
                 showModal(change > 0 ? 'Add Points' : 'Subtract Points');
+                longPressTimer = null;
             }, 500); // 500ms hold time
         }
 
@@ -996,12 +998,12 @@
             event.preventDefault();
             if (longPressTimer) {
                 clearTimeout(longPressTimer);
+                longPressTimer = null;
                 // If modal hasn't opened, do single update
                 if (!pendingUpdate) {
                     updateMarks(studentId, change);
                     quickFeedback(event);
                 }
-                longPressTimer = null;
             }
         }
 
@@ -1022,6 +1024,7 @@
         function closeModal() {
             document.getElementById('pointsModal').classList.add('hidden');
             pendingUpdate = null;
+            cancelLongPress();
         }
 
         function confirmBulkUpdate() {
