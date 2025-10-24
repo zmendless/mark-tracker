@@ -152,10 +152,11 @@
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
             gap: 15px;
             transition: transform 0.5s ease, opacity 0.3s ease;
+            position: relative;
         }
 
         .student-card.moving {
@@ -183,16 +184,19 @@
 
         .student-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
+            position: absolute;
+            top: 15px;
+            right: 15px;
         }
 
         .mark-btn {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border: none;
             border-radius: 50%;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             cursor: pointer;
             transition: transform 0.1s ease, background 0.1s ease;
@@ -400,12 +404,12 @@
 
         @media (max-width: 480px) {
             .student-card {
-                flex-direction: column;
-                align-items: stretch;
+                padding-top: 60px;
             }
 
             .student-actions {
-                justify-content: center;
+                top: 10px;
+                right: 10px;
             }
 
             .bar-label {
