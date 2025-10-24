@@ -782,14 +782,14 @@
                             <div class="top8-rank-students">
                     `;
 
-                    studentsWithMark.forEach(student => {
+                    studentsWithMark.forEach((student, index) => {
+                        const isLast = index === studentsWithMark.length - 1;
                         html += `
                             <div class="top8-item">
                                 <div class="top8-item-left">
                                     <div class="top8-name">${escapeHtml(student.name)}</div>
                                 </div>
-                                <div class="top8-marks">${student.marks}</div>
-                                <div class="top8-badge">Full Marks ✓</div>
+                                ${isLast ? '<div class="top8-badge">Full Marks ✓</div>' : ''}
                             </div>
                         `;
                     });
@@ -829,7 +829,6 @@
                                 <div class="top8-item-left">
                                     <div class="top8-name">${escapeHtml(student.name)}</div>
                                 </div>
-                                <div class="top8-marks">${student.marks}</div>
                             </div>
                         `;
                     });
