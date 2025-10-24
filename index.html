@@ -263,12 +263,13 @@
         }
 
         .bar-label {
-            min-width: 120px;
+            width: 120px;
             font-weight: 600;
             color: #003049;
             font-size: 14px;
             text-align: right;
             word-break: break-word;
+            flex-shrink: 0;
         }
 
         .bar-wrapper {
@@ -412,7 +413,7 @@
             }
 
             .bar-label {
-                min-width: 80px;
+                width: 80px;
                 font-size: 12px;
             }
 
@@ -725,11 +726,24 @@
             // Sort by marks descending
             const sorted = [...students].sort((a, b) => b.marks - a.marks);
 
+            // Group students by marks
+            const groupedByMarks = {};
+            sorted.forEach(student => {
+                if (!groupedByMarks[student.marks]) {
+                    groupedByMarks[student.marks] = [];
+                }
+                groupedByMarks[student.marks].push(student);
+            });
+
+            // Get unique marks in descending order
+            const uniqueMarks = Object.keys(groupedByMarks).map(Number).sort((a, b) => b - a);
+
             // Separate qualified and not qualified students
             const qualified = sorted.filter(s => s.marks >= threshold);
             const notQualified = sorted.filter(s => s.marks < threshold);
 
             let html = '';
+            let currentRank = 1;
 
             // Render qualified group
             if (qualified.length > 0) {
@@ -739,18 +753,23 @@
                         <div class="top8-students">
                 `;
 
-                qualified.forEach((student, index) => {
-                    const rank = index + 1;
-                    html += `
-                        <div class="top8-item">
-                            <div class="top8-item-left">
-                                <div class="top8-rank">#${rank}</div>
-                                <div class="top8-name">${escapeHtml(student.name)}</div>
-                            </div>
-                            <div class="top8-marks">${student.marks}</div>
-                            <div class="top8-badge">Full Marks ✓</div>
-                        </div>
-                    `;
+                uniqueMarks.forEach(mark => {
+                    if (mark >= threshold) {
+                        const studentsWithMark = groupedByMarks[mark];
+                        studentsWithMark.forEach(student => {
+                            html += `
+                                <div class="top8-item">
+                                    <div class="top8-item-left">
+                                        <div class="top8-rank">#${currentRank}</div>
+                                        <div class="top8-name">${escapeHtml(student.name)}</div>
+                                    </div>
+                                    <div class="top8-marks">${student.marks}</div>
+                                    <div class="top8-badge">Full Marks ✓</div>
+                                </div>
+                            `;
+                        });
+                        currentRank += studentsWithMark.length;
+                    }
                 });
 
                 html += `
@@ -767,17 +786,22 @@
                         <div class="top8-students">
                 `;
 
-                notQualified.forEach((student, index) => {
-                    const rank = qualified.length + index + 1;
-                    html += `
-                        <div class="top8-item">
-                            <div class="top8-item-left">
-                                <div class="top8-rank">#${rank}</div>
-                                <div class="top8-name">${escapeHtml(student.name)}</div>
-                            </div>
-                            <div class="top8-marks">${student.marks}</div>
-                        </div>
-                    `;
+                uniqueMarks.forEach(mark => {
+                    if (mark < threshold) {
+                        const studentsWithMark = groupedByMarks[mark];
+                        studentsWithMark.forEach(student => {
+                            html += `
+                                <div class="top8-item">
+                                    <div class="top8-item-left">
+                                        <div class="top8-rank">#${currentRank}</div>
+                                        <div class="top8-name">${escapeHtml(student.name)}</div>
+                                    </div>
+                                    <div class="top8-marks">${student.marks}</div>
+                                </div>
+                            `;
+                        });
+                        currentRank += studentsWithMark.length;
+                    }
                 });
 
                 html += `
