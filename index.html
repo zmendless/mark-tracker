@@ -442,7 +442,7 @@
             <div class="bar-chart" id="barChart"></div>
         </div>
 
-        <div id="top8View" class="top8-container hidden">
+        <div id="top8View" class="hidden">
             <div class="top8-header">
                 <h2>🏆 Top 8 Threshold</h2>
                 <div class="top8-threshold" id="top8Threshold">Calculating...</div>
@@ -701,6 +701,7 @@
         function renderTop8() {
             const container = document.getElementById('top8List');
             const thresholdEl = document.getElementById('top8Threshold');
+            const top8View = document.getElementById('top8View');
             
             if (students.length === 0) {
                 container.innerHTML = '<div class="empty-state">No students to display</div>';
