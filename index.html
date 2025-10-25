@@ -1056,16 +1056,32 @@
                 html += `
                     <div class="top8-group qualified">
                         <div class="top8-group-header">✋ Not Yet Chosen (${unchosen.length} student${unchosen.length !== 1 ? 's' : ''})</div>
-                        <div class="top8-students">
+                        <div class="student-list" style="margin-top: 15px;">
                 `;
 
                 unchosen.forEach(student => {
                     html += `
-                        <div class="top8-item" onclick="markAsChosen(${student.id})" style="cursor: pointer;">
-                            <div class="top8-item-left">
-                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                        <div class="student-card">
+                            <div class="student-info">
+                                <div class="student-name">${escapeHtml(student.name)}</div>
+                                <div class="student-mark">${student.marks}</div>
                             </div>
-                            <div class="top8-badge" style="background: #48bb78;">Tap to Mark ✓</div>
+                            <div class="student-actions">
+                                <button class="mark-btn minus" 
+                                    onmousedown="startLongPress(${student.id}, -1, event)" 
+                                    onmouseup="endLongPress(${student.id}, -1, event)" 
+                                    onmouseleave="cancelLongPress()" 
+                                    ontouchstart="startLongPress(${student.id}, -1, event)" 
+                                    ontouchend="endLongPress(${student.id}, -1, event)" 
+                                    ontouchcancel="cancelLongPress()">−</button>
+                                <button class="mark-btn plus" 
+                                    onmousedown="startLongPress(${student.id}, 1, event)" 
+                                    onmouseup="endLongPress(${student.id}, 1, event)" 
+                                    onmouseleave="cancelLongPress()" 
+                                    ontouchstart="startLongPress(${student.id}, 1, event)" 
+                                    ontouchend="endLongPress(${student.id}, 1, event)" 
+                                    ontouchcancel="cancelLongPress()">+</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -1078,7 +1094,6 @@
                 html += `
                     <div class="top8-group qualified">
                         <div class="top8-group-header">🎉 Everyone has been chosen!</div>
-                        <div class="empty-state">All students have participated in this session.</div>
                     </div>
                 `;
             }
@@ -1086,18 +1101,34 @@
             // Chosen group
             if (chosen.length > 0) {
                 html += `
-                    <div class="top8-group not-qualified">
+                    <div class="top8-group not-qualified" style="margin-top: 20px;">
                         <div class="top8-group-header">✓ Already Chosen (${chosen.length} student${chosen.length !== 1 ? 's' : ''})</div>
-                        <div class="top8-students">
+                        <div class="student-list" style="margin-top: 15px;">
                 `;
 
                 chosen.forEach(student => {
                     html += `
-                        <div class="top8-item" onclick="unmarkAsChosen(${student.id})" style="cursor: pointer;">
-                            <div class="top8-item-left">
-                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                        <div class="student-card">
+                            <div class="student-info">
+                                <div class="student-name">${escapeHtml(student.name)}</div>
+                                <div class="student-mark">${student.marks}</div>
                             </div>
-                            <div class="top8-badge" style="background: #dc2626;">Tap to Unmark ✗</div>
+                            <div class="student-actions">
+                                <button class="mark-btn minus" 
+                                    onmousedown="startLongPress(${student.id}, -1, event)" 
+                                    onmouseup="endLongPress(${student.id}, -1, event)" 
+                                    onmouseleave="cancelLongPress()" 
+                                    ontouchstart="startLongPress(${student.id}, -1, event)" 
+                                    ontouchend="endLongPress(${student.id}, -1, event)" 
+                                    ontouchcancel="cancelLongPress()">−</button>
+                                <button class="mark-btn plus" 
+                                    onmousedown="startLongPress(${student.id}, 1, event)" 
+                                    onmouseup="endLongPress(${student.id}, 1, event)" 
+                                    onmouseleave="cancelLongPress()" 
+                                    ontouchstart="startLongPress(${student.id}, 1, event)" 
+                                    ontouchend="endLongPress(${student.id}, 1, event)" 
+                                    ontouchcancel="cancelLongPress()">+</button>
+                            </div>
                         </div>
                     `;
                 });
