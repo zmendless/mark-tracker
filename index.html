@@ -259,6 +259,13 @@
             word-break: break-word;
         }
 
+        .student-id {
+            font-size: 14px;
+            font-weight: 500;
+            color: #718096;
+            margin-left: 8px;
+        }
+
         .student-mark {
             font-size: 36px;
             font-weight: 700;
@@ -880,7 +887,10 @@
             list.innerHTML = displayStudents.map(student => `
                 <div class="student-card ${isInitialLoad ? 'initial-load' : ''}" data-student-id="${student.id}">
                     <div class="student-info">
-                        <div class="student-name">${escapeHtml(student.name)}</div>
+                        <div class="student-name">
+                            ${escapeHtml(student.name)}
+                            ${student.schoolId ? `<span class="student-id">#${student.schoolId}</span>` : ''}
+                        </div>
                         <div class="student-mark">${student.marks}</div>
                     </div>
                     <div class="student-actions">
@@ -947,9 +957,10 @@
 
             chart.innerHTML = displayStudents.map(student => {
                 const percentage = (student.marks / maxMarks) * 100;
+                const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                 return `
                     <div class="bar-item">
-                        <div class="bar-label">${escapeHtml(student.name)}</div>
+                        <div class="bar-label">${escapeHtml(displayName)}</div>
                         <div class="bar-wrapper">
                             <div class="bar" style="width: ${percentage}%"></div>
                             <div class="bar-value">${student.marks}</div>
@@ -1027,10 +1038,11 @@
 
                     studentsWithMark.forEach((student, index) => {
                         const isLast = index === studentsWithMark.length - 1;
+                        const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                         html += `
                             <div class="top8-item">
                                 <div class="top8-item-left">
-                                    <div class="top8-name">${escapeHtml(student.name)}</div>
+                                    <div class="top8-name">${escapeHtml(displayName)}</div>
                                 </div>
                                 ${isLast ? '<div class="top8-badge">Full Marks ✓</div>' : ''}
                             </div>
@@ -1067,10 +1079,11 @@
                     `;
 
                     studentsWithMark.forEach(student => {
+                        const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                         html += `
                             <div class="top8-item">
                                 <div class="top8-item-left">
-                                    <div class="top8-name">${escapeHtml(student.name)}</div>
+                                    <div class="top8-name">${escapeHtml(displayName)}</div>
                                 </div>
                             </div>
                         `;
@@ -1124,10 +1137,11 @@
                 `;
 
                 unchosen.forEach(student => {
+                    const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                     html += `
                         <div class="student-card">
                             <div class="student-info">
-                                <div class="student-name">${escapeHtml(student.name)}</div>
+                                <div class="student-name">${escapeHtml(displayName)}</div>
                                 <div class="student-mark">${student.marks}</div>
                             </div>
                             <div class="student-actions">
@@ -1171,10 +1185,11 @@
                 `;
 
                 chosen.forEach(student => {
+                    const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                     html += `
                         <div class="student-card">
                             <div class="student-info">
-                                <div class="student-name">${escapeHtml(student.name)}</div>
+                                <div class="student-name">${escapeHtml(displayName)}</div>
                                 <div class="student-mark">${student.marks}</div>
                             </div>
                             <div class="student-actions">
