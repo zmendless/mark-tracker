@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mark-tracker-v1';
+const CACHE_NAME = 'mark-tracker-v2'; // Change version number
 const urlsToCache = [
   'index.html',
   'manifest.json',
@@ -10,6 +10,22 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
   );
+  self.skipWaiting(); // Force the waiting service worker to become active
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // Delete old caches
+          }
+        })
+      );
+    })
+  );
+  return self.clients.claim(); // Take control of all pages
 });
 
 self.addEventListener('fetch', event => {
