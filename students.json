@@ -1,6 +1,30 @@
 [
-  { "id": 1, "name": "Ahmed Ali", "schoolId": 123 },
-  { "id": 2, "name": "Fatima Hassan", "schoolId": 45 },
-  { "id": 3, "name": "Mohammed Ibrahim", "schoolId": 7 },
-  { "id": 4, "name": "Aisha Khalil", "schoolId": 890 }
+  { "id": 1, "marks": 46, "name": "Ali Özfırat" },
+  { "id": 2, "marks": 49, "name": "Bülent Kayra Mert" },
+  { "id": 3, "marks": 43, "name": "Ecrin Bozkurt" },
+  { "id": 4, "marks": 45, "name": "Eda Arpalık" },
+  { "id": 5, "marks": 13, "name": "Eren Duman" },
+  { "id": 6, "marks": 30, "name": "Eyüp Aydın" },
+  { "id": 7, "marks": 4, "name": "Halil İbrahim Tunçez" },
+  { "id": 8, "marks": 41, "name": "Hatice Yılmazer" },
+  { "id": 9, "marks": 45, "name": "Hayrunnisa Akdağ" },
+  { "id": 10, "marks": 49, "name": "Hayrunnisa Yıldız" },
+  { "id": 11, "marks": 45, "name": "Hira Nur Başaran" },
+  { "id": 12, "marks": 40, "name": "İrem Kırmızı" },
+  { "id": 13, "marks": 9, "name": "Muhammed Taha Kılıç" },
+  { "id": 14, "marks": 44, "name": "Pelin Başaran" },
+  { "id": 15, "marks": 44, "name": "Seden Sabır" },
+  { "id": 16, "marks": 48, "name": "Tuğçe Yaren Ay" },
+  { "id": 17, "marks": 1, "name": "Umut Duman" },
+  { "id": 18, "marks": 24, "name": "Yalçın Teke" },
+  { "id": 19, "marks": 48, "name": "Zeren Betül Küçük" },
+  { "id": 20, "marks": 43, "name": "Zeynep Yoldaş" },
+  { "id": 21, "marks": 25, "name": "Mehmet Can Birgül" },
+  { "id": 22, "marks": 30, "name": "Canfeda" },
+  { "id": 23, "marks": 49, "name": "Elif" },
+  { "id": 24, "marks": 2, "name": "Yavuz Alperen" },
+  { "id": 25, "marks": 18, "name": "Eren Acar" },
+  { "id": 26, "marks": 39, "name": "Bengisu" }
 ]
+
+
