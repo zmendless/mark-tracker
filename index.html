@@ -608,6 +608,7 @@
                 <button class="view-btn active" onclick="setView('list')">List View</button>
                 <button class="view-btn" onclick="setView('graph')">Graph View</button>
                 <button class="view-btn" onclick="setView('top8')">Top</button>
+                <button class="view-btn" onclick="setView('unchosen')">Unchosen</button>
             </div>
             <div class="sort-controls">
                 <button class="sort-btn active" onclick="setSortMode('marks')">Sort by Marks</button>
@@ -627,6 +628,16 @@
                 <div class="top8-threshold" id="top8Threshold">Calculating...</div>
             </div>
             <div class="top8-list" id="top8List"></div>
+        </div>
+
+        <div id="unchosenView" class="hidden">
+            <div class="top8-header">
+                <h2>👋 Session Tracker</h2>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="resetSession()">Reset Session</button>
+                </div>
+            </div>
+            <div id="unchosenList"></div>
         </div>
 
         <!-- Modal for bulk points -->
@@ -682,6 +693,7 @@
         let currentView = 'list';
         let longPressTimer = null;
         let pendingUpdate = null;
+        let chosenThisSession = new Set(); // Track who's been chosen this session
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', async () => {
@@ -690,32 +702,35 @@
             renderContent();
         });
 
-async function loadStudentsFromJSON() {
-    try {
-        const savedMarks = localStorage.getItem('studentMarks');
-        const response = await fetch('students.json');
-        const studentList = await response.json();
-
-        if (savedMarks) {
-            const marksData = JSON.parse(savedMarks);
-            students = studentList.map(student => ({
-                ...student,
-                marks: marksData[student.id] !== undefined ? marksData[student.id] : (student.marks || 0)
-            }));
-        } else {
-            // Use JSON marks directly
-            students = studentList.map(student => ({
-                ...student,
-                marks: student.marks || 0
-            }));
+        async function loadStudentsFromJSON() {
+            try {
+                // Try to load saved marks from localStorage first
+                const savedMarks = localStorage.getItem('studentMarks');
+                
+                // Load the students.json file
+                const response = await fetch('students.json');
+                const studentList = await response.json();
+                
+                // If we have saved marks, merge them with the student list
+                if (savedMarks) {
+                    const marksData = JSON.parse(savedMarks);
+                    students = studentList.map(student => ({
+                        ...student,
+                        marks: marksData[student.id] !== undefined ? marksData[student.id] : 0
+                    }));
+                } else {
+                    // First time load - initialize all marks to 0
+                    students = studentList.map(student => ({
+                        ...student,
+                        marks: 0
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                // Fallback to empty array if JSON file doesn't exist
+                students = [];
+            }
         }
-    } catch (error) {
-        console.error('Error loading students:', error);
-        students = [];
-    }
-}
-
-
 
         function saveMarks() {
             try {
@@ -738,6 +753,12 @@ async function loadStudentsFromJSON() {
                     sortMode = data.sortMode || 'marks';
                     currentView = data.currentView || 'list';
                 }
+                
+                // Load chosen students for this session
+                const savedChosen = localStorage.getItem('chosenThisSession');
+                if (savedChosen) {
+                    chosenThisSession = new Set(JSON.parse(savedChosen));
+                }
             } catch (e) {
                 console.error('Error loading settings:', e);
             }
@@ -749,6 +770,9 @@ async function loadStudentsFromJSON() {
                     sortMode: sortMode,
                     currentView: currentView
                 }));
+                
+                // Save chosen students
+                localStorage.setItem('chosenThisSession', JSON.stringify([...chosenThisSession]));
             } catch (e) {
                 console.error('Error saving settings:', e);
             }
@@ -773,6 +797,8 @@ async function loadStudentsFromJSON() {
                 renderGraph();
             } else if (currentView === 'top8') {
                 renderTop8();
+            } else if (currentView === 'unchosen') {
+                renderUnchosen();
             }
             updateActiveButtons();
         }
@@ -801,7 +827,10 @@ async function loadStudentsFromJSON() {
             list.innerHTML = displayStudents.map(student => `
                 <div class="student-card" data-student-id="${student.id}">
                     <div class="student-info">
-                        <div class="student-name">${escapeHtml(student.name)}</div>
+                        <div class="student-name">
+                            ${escapeHtml(student.name)}
+                            ${chosenThisSession.has(student.id) ? ' ✓' : ''}
+                        </div>
                         <div class="student-mark">${student.marks}</div>
                     </div>
                     <div class="student-actions">
@@ -1008,6 +1037,100 @@ async function loadStudentsFromJSON() {
             container.innerHTML = html;
         }
 
+        function renderUnchosen() {
+            const container = document.getElementById('unchosenList');
+            
+            if (students.length === 0) {
+                container.innerHTML = '<div class="empty-state">No students to display</div>';
+                return;
+            }
+
+            // Separate into chosen and unchosen
+            const unchosen = students.filter(s => !chosenThisSession.has(s.id));
+            const chosen = students.filter(s => chosenThisSession.has(s.id));
+
+            let html = '';
+
+            // Unchosen group
+            if (unchosen.length > 0) {
+                html += `
+                    <div class="top8-group qualified">
+                        <div class="top8-group-header">✋ Not Yet Chosen (${unchosen.length} student${unchosen.length !== 1 ? 's' : ''})</div>
+                        <div class="top8-students">
+                `;
+
+                unchosen.forEach(student => {
+                    html += `
+                        <div class="top8-item" onclick="markAsChosen(${student.id})" style="cursor: pointer;">
+                            <div class="top8-item-left">
+                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                            </div>
+                            <div class="top8-badge" style="background: #48bb78;">Tap to Mark ✓</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="top8-group qualified">
+                        <div class="top8-group-header">🎉 Everyone has been chosen!</div>
+                        <div class="empty-state">All students have participated in this session.</div>
+                    </div>
+                `;
+            }
+
+            // Chosen group
+            if (chosen.length > 0) {
+                html += `
+                    <div class="top8-group not-qualified">
+                        <div class="top8-group-header">✓ Already Chosen (${chosen.length} student${chosen.length !== 1 ? 's' : ''})</div>
+                        <div class="top8-students">
+                `;
+
+                chosen.forEach(student => {
+                    html += `
+                        <div class="top8-item" onclick="unmarkAsChosen(${student.id})" style="cursor: pointer;">
+                            <div class="top8-item-left">
+                                <div class="top8-name">${escapeHtml(student.name)}</div>
+                            </div>
+                            <div class="top8-badge" style="background: #dc2626;">Tap to Unmark ✗</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function markAsChosen(studentId) {
+            chosenThisSession.add(studentId);
+            saveSettings();
+            renderContent();
+        }
+
+        function unmarkAsChosen(studentId) {
+            chosenThisSession.delete(studentId);
+            saveSettings();
+            renderContent();
+        }
+
+        function resetSession() {
+            if (confirm('Reset the session? This will mark all students as not yet chosen.')) {
+                chosenThisSession.clear();
+                saveSettings();
+                renderContent();
+            }
+        }
+
         function updateActiveButtons() {
             // Update sort buttons
             document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -1020,20 +1143,28 @@ async function loadStudentsFromJSON() {
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            const activeViewBtn = currentView === 'list' ? 0 : currentView === 'graph' ? 1 : 2;
+            const activeViewBtn = currentView === 'list' ? 0 : currentView === 'graph' ? 1 : currentView === 'top8' ? 2 : 3;
             document.querySelectorAll('.view-btn')[activeViewBtn].classList.add('active');
 
             // Toggle visibility
             document.getElementById('listView').classList.toggle('hidden', currentView !== 'list');
             document.getElementById('graphView').classList.toggle('hidden', currentView !== 'graph');
             document.getElementById('top8View').classList.toggle('hidden', currentView !== 'top8');
+            document.getElementById('unchosenView').classList.toggle('hidden', currentView !== 'unchosen');
         }
 
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
                 student.marks = student.marks + change;
+                
+                // Mark as chosen when they get points
+                if (change > 0) {
+                    chosenThisSession.add(studentId);
+                }
+                
                 saveMarks();
+                saveSettings();
                 renderContent();
             }
         }
