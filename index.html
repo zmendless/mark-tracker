@@ -1353,6 +1353,12 @@
 
         function setView(view) {
             currentView = view;
+            
+            // If switching back to list view, treat it as initial load to avoid buggy animations
+            if (view === 'list') {
+                isInitialLoad = true;
+            }
+            
             saveSettings();
             renderContent();
         }
