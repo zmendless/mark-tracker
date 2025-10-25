@@ -827,10 +827,7 @@
             list.innerHTML = displayStudents.map(student => `
                 <div class="student-card" data-student-id="${student.id}">
                     <div class="student-info">
-                        <div class="student-name">
-                            ${escapeHtml(student.name)}
-                            ${chosenThisSession.has(student.id) ? ' ✓' : ''}
-                        </div>
+                        <div class="student-name">${escapeHtml(student.name)}</div>
                         <div class="student-mark">${student.marks}</div>
                     </div>
                     <div class="student-actions">
@@ -1049,10 +1046,10 @@
             let unchosen = students.filter(s => !chosenThisSession.has(s.id));
             let chosen = students.filter(s => chosenThisSession.has(s.id));
 
-            // Apply sorting
+            // Apply sorting - REVERSED for unchosen view (smallest to biggest)
             if (sortMode === 'marks') {
-                unchosen.sort((a, b) => b.marks - a.marks);
-                chosen.sort((a, b) => b.marks - a.marks);
+                unchosen.sort((a, b) => a.marks - b.marks); // Ascending order
+                chosen.sort((a, b) => a.marks - b.marks);   // Ascending order
             } else if (sortMode === 'alpha') {
                 unchosen.sort((a, b) => a.name.localeCompare(b.name));
                 chosen.sort((a, b) => a.name.localeCompare(b.name));
