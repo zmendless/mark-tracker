@@ -223,6 +223,9 @@
             gap: 15px;
             transition: transform 0.5s ease, opacity 0.3s ease;
             min-height: 70px;
+        }
+
+        .student-card.initial-load {
             animation: fadeIn 0.3s ease;
         }
 
@@ -326,6 +329,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
         }
 
         .bar-chart {
@@ -338,6 +342,18 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            animation: slideInLeft 0.4s ease;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .bar-label {
@@ -375,6 +391,10 @@
             display: none !important;
         }
 
+        .view-transition {
+            animation: fadeIn 0.3s ease;
+        }
+
         .top8-container {
             display: flex;
             flex-direction: column;
@@ -387,6 +407,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
+            animation: fadeIn 0.3s ease;
         }
 
         .top8-header h2 {
@@ -406,6 +427,7 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.4s ease;
         }
 
         .top8-group-header {
@@ -463,6 +485,7 @@
             background: #f8f9fa;
             gap: 15px;
             border-bottom: 1px solid #e0e0e0;
+            animation: fadeIn 0.3s ease;
         }
 
         .top8-item:last-child {
@@ -512,6 +535,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            animation: fadeIn 0.2s ease;
         }
 
         .modal {
@@ -521,6 +545,18 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             max-width: 400px;
             width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-title {
@@ -708,6 +744,7 @@
         let longPressTimer = null;
         let pendingUpdate = null;
         let chosenThisSession = new Set(); // Track who's been chosen this session
+        let isInitialLoad = true; // Track if this is the first load
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', async () => {
@@ -827,19 +864,21 @@
 
             const displayStudents = getSortedStudents();
 
-            // Store current positions before render
+            // Store current positions before render (only if not initial load)
             const oldPositions = new Map();
-            const existingCards = list.querySelectorAll('.student-card');
-            existingCards.forEach((card) => {
-                const rect = card.getBoundingClientRect();
-                const id = card.dataset.studentId;
-                if (id) {
-                    oldPositions.set(id, rect.top);
-                }
-            });
+            if (!isInitialLoad) {
+                const existingCards = list.querySelectorAll('.student-card');
+                existingCards.forEach((card) => {
+                    const rect = card.getBoundingClientRect();
+                    const id = card.dataset.studentId;
+                    if (id) {
+                        oldPositions.set(id, rect.top);
+                    }
+                });
+            }
 
             list.innerHTML = displayStudents.map(student => `
-                <div class="student-card" data-student-id="${student.id}">
+                <div class="student-card ${isInitialLoad ? 'initial-load' : ''}" data-student-id="${student.id}">
                     <div class="student-info">
                         <div class="student-name">${escapeHtml(student.name)}</div>
                         <div class="student-mark">${student.marks}</div>
@@ -863,7 +902,12 @@
                 </div>
             `).join('');
 
-            // Animate position changes if in marks sort mode
+            // Mark that initial load is complete after first render
+            if (isInitialLoad) {
+                isInitialLoad = false;
+            }
+
+            // Animate position changes if in marks sort mode (only if not initial load and we have old positions)
             if (sortMode === 'marks' && oldPositions.size > 0) {
                 requestAnimationFrame(() => {
                     const newCards = list.querySelectorAll('.student-card');
