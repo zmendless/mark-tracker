@@ -605,8 +605,8 @@
             <div class="offline-indicator">✓ Offline Mode</div>
             <h1>📚 Mark Tracker</h1>
             <div class="header-controls">
-                <button class="view-btn active" onclick="setView('list')">List View</button>
-                <button class="view-btn" onclick="setView('graph')">Graph View</button>
+                <button class="view-btn active" onclick="setView('list')">List</button>
+                <button class="view-btn" onclick="setView('graph')">Graph</button>
                 <button class="view-btn" onclick="setView('top8')">Top</button>
                 <button class="view-btn" onclick="setView('unchosen')">Unchosen</button>
             </div>
@@ -1046,8 +1046,17 @@
             }
 
             // Separate into chosen and unchosen
-            const unchosen = students.filter(s => !chosenThisSession.has(s.id));
-            const chosen = students.filter(s => chosenThisSession.has(s.id));
+            let unchosen = students.filter(s => !chosenThisSession.has(s.id));
+            let chosen = students.filter(s => chosenThisSession.has(s.id));
+
+            // Apply sorting
+            if (sortMode === 'marks') {
+                unchosen.sort((a, b) => b.marks - a.marks);
+                chosen.sort((a, b) => b.marks - a.marks);
+            } else if (sortMode === 'alpha') {
+                unchosen.sort((a, b) => a.name.localeCompare(b.name));
+                chosen.sort((a, b) => a.name.localeCompare(b.name));
+            }
 
             let html = '';
 
