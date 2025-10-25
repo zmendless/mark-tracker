@@ -774,12 +774,14 @@
                     const marksData = JSON.parse(savedMarks);
                     students = studentList.map(student => ({
                         ...student,
+                        schoolId: student.schoolId || 10, // Default to 10 if not provided
                         marks: marksData[student.id] !== undefined ? marksData[student.id] : 0
                     }));
                 } else {
                     // First time load - initialize all marks to 0
                     students = studentList.map(student => ({
                         ...student,
+                        schoolId: student.schoolId || 10, // Default to 10 if not provided
                         marks: 0
                     }));
                 }
