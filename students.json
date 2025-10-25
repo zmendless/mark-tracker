@@ -1,5 +1,6 @@
 [
-  { "id": 1, "marks": 46, "name": "Ali Özfırat", "schoolId": 123 },
+  { "id": 1, "name": "Ahmed Ali", "schoolId": 123 },
+  { "id": 2, "name": "Fatima Hassan", "schoolId": 45 },
+  { "id": 3, "name": "Mohammed Ibrahim", "schoolId": 7 },
+  { "id": 4, "name": "Aisha Khalil", "schoolId": 890 }
 ]
-
-
