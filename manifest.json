@@ -1,6 +1,6 @@
 {
   "name": "Mark Tracker",
-  "short_name": "Marks",
+  "short_name": "Mark Tracker",
   "description": "Track student marks offline",
   "start_url": "index.html",
   "display": "standalone",
@@ -19,4 +19,5 @@
       "type": "image/png"
     }
   ]
+
 }
