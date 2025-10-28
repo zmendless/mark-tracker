@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mark-tracker-v2'; // Change version number
+const CACHE_NAME = 'mark-tracker-v3'; 
 const urlsToCache = [
   'index.html',
   'manifest.json',
@@ -34,3 +34,4 @@ self.addEventListener('fetch', event => {
       .then(response => response || fetch(event.request))
   );
 });
+
