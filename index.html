@@ -762,29 +762,32 @@
 
         async function loadStudentsFromJSON() {
             try {
-                // Try to load saved marks from localStorage first
-                const savedMarks = localStorage.getItem('studentMarks');
-                
                 // Load the students.json file
                 const response = await fetch('students.json');
                 const studentList = await response.json();
                 
-                // If we have saved marks, merge them with the student list
-                if (savedMarks) {
-                    const marksData = JSON.parse(savedMarks);
-                    students = studentList.map(student => ({
-                        ...student,
-                        schoolId: student.schoolId || 10, // Default to 10 if not provided
-                        marks: marksData[student.id] !== undefined ? marksData[student.id] : 0
-                    }));
-                } else {
-                    // First time load - initialize all marks to 0
-                    students = studentList.map(student => ({
-                        ...student,
-                        schoolId: student.schoolId || 10, // Default to 10 if not provided
-                        marks: 0
-                    }));
-                }
+                // Try to load saved marks from localStorage
+                const savedMarks = localStorage.getItem('studentMarks');
+                
+                // Process student list
+                students = studentList.map(student => {
+                    let marks = 0;
+                    
+                    // Use saved marks if available, otherwise use marks from JSON
+                    if (savedMarks) {
+                        const marksData = JSON.parse(savedMarks);
+                        marks = marksData[student.id] !== undefined ? marksData[student.id] : (student.marks || 0);
+                    } else {
+                        marks = student.marks || 0;
+                    }
+                    
+                    return {
+                        id: student.id,
+                        name: student.name,
+                        schoolId: student.schoolId !== undefined ? student.schoolId : 10,
+                        marks: marks
+                    };
+                });
             } catch (error) {
                 console.error('Error loading students:', error);
                 // Fallback to empty array if JSON file doesn't exist
