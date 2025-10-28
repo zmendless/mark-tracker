@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mark-tracker-v3'; 
+const CACHE_NAME = 'mark-tracker-v4'; 
 const urlsToCache = [
   'index.html',
   'manifest.json',
@@ -23,6 +23,13 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      // Notify all clients (pages) to clear localStorage
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ action: 'clear-local-storage' });
+        });
+      });
     })
   );
   return self.clients.claim(); // Take control of all pages
@@ -34,4 +41,3 @@ self.addEventListener('fetch', event => {
       .then(response => response || fetch(event.request))
   );
 });
-
