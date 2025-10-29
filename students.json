@@ -13,7 +13,7 @@
   { "id": 12, "marks": 40, "name": "İrem Kırmızı", "schoolId": 27 },
   { "id": 13, "marks": 9, "name": "Muhammed Taha Kılıç", "schoolId": 160 },
   { "id": 14, "marks": 44, "name": "Pelin Başaran", "schoolId": 11 },
-  { "id": 15, "marks": 44, "name": "Seden Sabır", "schoolId": 51 },
+  { "id": 15, "marks": 44, "name": "Seden Sabır", "schoolId": 59 },
   { "id": 16, "marks": 48, "name": "Tuğçe Yaren Ay", "schoolId": 21 },
   { "id": 17, "marks": 1, "name": "Umut Duman", "schoolId": 33 },
   { "id": 18, "marks": 24, "name": "Yalçın Teke", "schoolId": 34 },
@@ -26,3 +26,4 @@
   { "id": 25, "marks": 18, "name": "Eren Acar", "schoolId": 32 },
   { "id": 26, "marks": 39, "name": "Bengisu Aktı", "schoolId": 9 }
 ]
+
