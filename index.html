@@ -958,10 +958,26 @@
             }
 
             const displayStudents = getSortedStudents();
-            const maxMarks = Math.max(...displayStudents.map(s => s.marks), 1);
+            const marks = displayStudents.map(s => s.marks);
+            const maxMarks = Math.max(...marks);
+            const minMarks = Math.min(...marks);
+            
+            // Calculate range for better scaling
+            const range = maxMarks - minMarks;
+            const useScaling = range > 0; // Only scale if there's a difference
 
             chart.innerHTML = displayStudents.map(student => {
-                const percentage = (student.marks / maxMarks) * 100;
+                let percentage;
+                if (useScaling) {
+                    // Scale between min and max for better visualization
+                    percentage = ((student.marks - minMarks) / range) * 100;
+                    // Ensure at least 2% width for visibility
+                    percentage = Math.max(percentage, 2);
+                } else {
+                    // All students have same marks
+                    percentage = 100;
+                }
+                
                 const displayName = student.schoolId ? `${student.name} #${student.schoolId}` : student.name;
                 return `
                     <div class="bar-item">
