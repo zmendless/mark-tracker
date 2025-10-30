@@ -780,13 +780,11 @@
                     } else {
                         marks = student.marks || 0;
                     }
-
-                    console.log(student.schoolId);
                     
                     return {
                         id: student.id,
                         name: student.name,
-                        schoolId: student.schoolId,
+                        schoolId: student.schoolId !== undefined ? student.schoolId : 10,
                         marks: marks
                     };
                 });
@@ -1273,6 +1271,14 @@
         function updateMarks(studentId, change) {
             const student = students.find(s => s.id === studentId);
             if (student) {
+                // Check for reset code (1614)
+                if (change === 1614) {
+                    if (confirm('Reset all marks to default values from students.json?')) {
+                        resetToDefault();
+                    }
+                    return;
+                }
+                
                 student.marks = student.marks + change;
                 
                 // Mark as chosen when they get points
@@ -1283,6 +1289,41 @@
                 saveMarks();
                 saveSettings();
                 renderContent();
+            }
+        }
+
+        async function resetToDefault() {
+            try {
+                // Clear localStorage
+                localStorage.removeItem('studentMarks');
+                localStorage.removeItem('chosenThisSession');
+                
+                // Reload from JSON
+                const response = await fetch('students.json');
+                const studentList = await response.json();
+                
+                students = studentList.map(student => ({
+                    id: student.id,
+                    name: student.name,
+                    schoolId: student.schoolId !== undefined ? student.schoolId : 10,
+                    marks: student.marks || 0
+                }));
+                
+                // Clear chosen session
+                chosenThisSession.clear();
+                
+                // Save the new state
+                saveMarks();
+                saveSettings();
+                
+                // Render
+                isInitialLoad = true;
+                renderContent();
+                
+                alert('System reset to default values!');
+            } catch (error) {
+                console.error('Error resetting:', error);
+                alert('Error resetting system. Please refresh the page.');
             }
         }
 
@@ -1390,5 +1431,3 @@
     </script>
 </body>
 </html>
-
-
