@@ -8,8 +8,8 @@
   { "id": 7, "marks": 4, "name": "Halil İbrahim Tunçez", "schoolId": 91 },
   { "id": 8, "marks": 41, "name": "Hatice Yılmazer", "schoolId": 23 },
   { "id": 9, "marks": 45, "name": "Hayrunnisa Akdağ", "schoolId": 24 },
-  { "id": 10, "marks": 49, "name": "Hayrunnisa Yıldız", "schoolId": 25 },
-  { "id": 11, "marks": 45, "name": "Hira Nur Başaran", "schoolId": 10 },
+  { "id": 10, "marks": 49, "name": "Hayrunnisa Yıldız", "schoolId": 30 },
+  { "id": 11, "marks": 45, "name": "Hira Nur Başaran", "schoolId": 25 },
   { "id": 12, "marks": 40, "name": "İrem Kırmızı", "schoolId": 27 },
   { "id": 13, "marks": 9, "name": "Muhammed Taha Kılıç", "schoolId": 160 },
   { "id": 14, "marks": 44, "name": "Pelin Başaran", "schoolId": 11 },
@@ -26,4 +26,5 @@
   { "id": 25, "marks": 18, "name": "Eren Acar", "schoolId": 32 },
   { "id": 26, "marks": 39, "name": "Bengisu Aktı", "schoolId": 9 }
 ]
+
 
